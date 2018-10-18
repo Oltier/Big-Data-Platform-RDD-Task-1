@@ -1,6 +1,6 @@
 package questions
 
-import org.apache.spark.graphx.{Edge, Graph, VertexId, VertexRDD}
+import org.apache.spark.graphx.{Edge, Graph, VertexId}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -202,16 +202,17 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
       .filter(_.matches(pattern.toString()))
       .map(line => {
         val pattern(firstUserId, secondUserId) = line
-        (firstUserId.toInt, secondUserId.toInt)
+        ((firstUserId.toFloat.asInstanceOf[VertexId], firstUserId.toInt), (secondUserId.toFloat.asInstanceOf[VertexId], secondUserId.toInt))
       })
     val col1 = userRelationships.map(_._1)
     val col2 = userRelationships.map(_._2)
-    val vertices = (col1 ++ col2).distinct.map(id => (id.toLong, id))
-    val edges = userRelationships
-      .map(uids => (uids, 1))
+    val vertices: RDD[(VertexId, Int)] = (col1 ++ col2).distinct
+    val edges: RDD[Edge[Int]] = userRelationships
+      .map(relationship => ((relationship._1._1, relationship._2._1), 1))
       .reduceByKey(_ + _)
-      .map(edgeData => Edge(edgeData._1._1, edgeData._1._1, edgeData._2))
+      .map(relationShip => Edge(relationShip._1._1, relationShip._1._2, relationShip._2))
 
+    edges.foreach(println(_))
     Graph(vertices, edges)
   }
 

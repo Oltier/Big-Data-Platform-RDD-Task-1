@@ -2,6 +2,7 @@ package questions
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.graphx.{Edge, Graph}
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.scalatest.Matchers._
 import org.scalatest._
