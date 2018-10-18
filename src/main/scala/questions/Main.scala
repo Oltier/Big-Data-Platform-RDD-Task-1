@@ -7,7 +7,7 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
 object Main {
-    def main(args: Array[String]) = {
+    def main(args: Array[String]): Unit = {
 	
         Logger.getLogger("org").setLevel(Level.OFF)
         Logger.getLogger("akka").setLevel(Level.OFF)
@@ -22,9 +22,9 @@ object Main {
         val processor = new GeoProcessor(spark,path)
 
         //example for printing
-        //val filtered = processor.filterData(processor.file)
+        val filtered = processor.filterData(processor.file)
 
-        //filtered.take(5).foreach(x => println(x.mkString(" ")))
+        filtered.take(5).foreach(x => println(x.mkString(" ")))
 
         //processor.filterElevation("FI", filtered).take(10).foreach(x => print(x + " "))
 
