@@ -4,8 +4,11 @@ import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
+case class HotelsDto(name: String, latitude: Double, longitude: Double, havDistance: Double = Double.MaxValue)
 
-/** GeoProcessor provides functionalites to 
+case class Location(longitude: Double, latitude: Double)
+
+/** GeoProcessor provides functionalites to
   * process country/city/location data.
   * We are using data from http://download.geonames.org/export/dump/
   * which is licensed under creative commons 3.0 http://creativecommons.org/licenses/by/3.0/
@@ -21,6 +24,8 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
   val nameColumnId = 1
   val countryCodeColumnId = 8
   val demColumnId = 16
+  val latitudeColumnId = 4
+  val longitudeColumnId = 5
 
   /** filterData removes unnecessary fields and splits the data so
     * that the RDD looks like RDD(Array("<name>","<countryCode>","<dem>"),...))
@@ -70,10 +75,10 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
 
   /** mostCommonWords calculates what is the most common
     * word in place names and returns an RDD[(String,Int)]
-    * You can assume that words are separated by a single space ' '. 
+    * You can assume that words are separated by a single space ' '.
     *
     * @param data an RDD containing multiple Array[<name>, <countryCode>, <dem>]
-    * @return RDD[(String,Int)] where string is the word and Int number of 
+    * @return RDD[(String,Int)] where string is the word and Int number of
     * occurrences. RDD should be in descending order (sorted by number of occurrences).
     * e.g ("hotel", 234), ("airport", 120), ("new", 12)
     */
@@ -97,7 +102,7 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     val countryIds = data.map(array => Array(array(countryIdColumn)))
     val mostCommonCountryId = mostCommonWords(countryIds).take(1)(0)._1
     val countryName = countryIdsAndNames.filter(_._2 == mostCommonCountryId).map(_._1)
-    if(countryName.isEmpty()) {
+    if (countryName.isEmpty()) {
       ""
     } else {
       countryName.first()
@@ -124,7 +129,31 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * @return number of hotels in area
     */
   def hotelsInArea(lat: Double, long: Double): Int = {
-    ???
+    val maxDistanceMetres = 10000.0
+    val hotelLocations = file.map(_.split("\t"))
+      .map(arr => HotelsDto(arr(nameColumnId), arr(latitudeColumnId).toDouble, arr(longitudeColumnId).toDouble))
+      .filter(_.name.toLowerCase.contains("hotel"))
+      .map(hotel => Location(hotel.longitude, hotel.latitude))
+
+    val centreLocation = Location(long, lat)
+    val hotelsInDistance = hotelLocations
+      .filter(hotelLocation => calculateDistanceInMetres(centreLocation, hotelLocation) <= maxDistanceMetres)
+
+    hotelsInDistance.count().toInt
+  }
+
+  private def calculateDistanceInMetres(centreLocation: Location, hotelLocation: Location): Double = {
+    val earthRadiusMetres = 6371e3
+    val latitudeDistance = Math.toRadians(centreLocation.latitude - hotelLocation.latitude)
+    val longitudeDistance = Math.toRadians(centreLocation.longitude - hotelLocation.longitude)
+    val sinLatitude = Math.sin(latitudeDistance / 2)
+    val sinLongitude = Math.sin(longitudeDistance / 2)
+    val a = Math.pow(sinLatitude, 2) + (Math.cos(Math.toRadians(centreLocation.latitude)) *
+      Math.cos(Math.toRadians(hotelLocation.latitude)) *
+      Math.pow(sinLongitude, 2))
+    val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+    earthRadiusMetres * c
   }
 
   //GraphX exercises
