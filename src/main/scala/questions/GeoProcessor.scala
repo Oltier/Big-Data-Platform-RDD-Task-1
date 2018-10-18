@@ -234,7 +234,14 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * @return user with highest pageRank
     */
   def pageRankHighest(graph: Graph[Int, Int]): Int = {
-    ???
+    val ranks = graph.pageRank(0.0001).vertices
+    val users = graph.vertices
+
+    val ranksByUsername = users.join(ranks).map {
+      case (id, (uid, rank)) => (uid, rank)
+    }
+
+    ranksByUsername.sortBy(_._2, ascending = false).first()._1
   }
 }
 
