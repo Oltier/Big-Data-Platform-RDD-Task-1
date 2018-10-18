@@ -223,7 +223,7 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * @return vertex_id as Int
     */
   def mostActiveUser(graph: Graph[Int, Int]): Int = {
-    ???
+    graph.outDegrees.sortBy(_._2, ascending = false).first._1.toInt
   }
 
   /**
