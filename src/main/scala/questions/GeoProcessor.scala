@@ -51,7 +51,10 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * @return RDD containing only elevation information
     */
   def filterElevation(countryCode: String, data: RDD[Array[String]]): RDD[Int] = {
-    ???
+    val countryCodeId = 1
+    val demId = 2
+
+    data.filter(_(countryCodeId) == countryCode).map(_(demId).toInt)
   }
 
 
