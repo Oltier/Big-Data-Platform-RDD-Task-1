@@ -65,7 +65,7 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * @return The average elevation
     */
   def elevationAverage(data: RDD[Int]): Double = {
-    ???
+    data.sum / data.count
   }
 
   /** mostCommonWords calculates what is the most common
