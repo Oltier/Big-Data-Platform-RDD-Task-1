@@ -34,3 +34,5 @@ download := {
             "remove folder src/main/resources/.")
   }
 }
+
+scalacOptions ++= Seq("-unchecked", "-deprecation")

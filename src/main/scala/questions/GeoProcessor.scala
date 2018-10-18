@@ -212,7 +212,6 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
       .reduceByKey(_ + _)
       .map(relationShip => Edge(relationShip._1._1, relationShip._1._2, relationShip._2))
 
-    edges.foreach(println(_))
     Graph(vertices, edges)
   }
 
