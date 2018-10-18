@@ -1,6 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Scala template
-*.class
 *.log
 ### SBT template
 # Simple Build Tool
@@ -12,8 +11,10 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
-.history
 .cache
 .lib/
 
 .idea
+/src/main/resources/allCountries.txt
+/src/main/resources/socialgraph.dat
+/src/main/resources/coutrycodes.csv
