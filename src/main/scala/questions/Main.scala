@@ -15,7 +15,7 @@ object Main {
       .config("spark.driver.memory", "5g")
       .getOrCreate()
 
-    val path = getClass().getResource("/allCountries.txt").toString
+    val path = getClass.getResource("/allCountries.txt").toString
     val processor = new GeoProcessor(spark, path)
 
     //example for printing

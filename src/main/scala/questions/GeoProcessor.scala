@@ -54,7 +54,7 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     val countryCodeId = 1
     val demId = 2
 
-    data.filter(_(countryCodeId) == countryCode).map(_(demId).toInt)
+    data.filter(_ (countryCodeId) == countryCode).map(_ (demId).toInt)
   }
 
 
@@ -79,7 +79,7 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     */
   def mostCommonWords(data: RDD[Array[String]]): RDD[(String, Int)] = {
     val nameId = 0
-    data.map(_(nameId)).flatMap(_.split(' ')).map(word => (word, 1)).reduceByKey(_ + _).sortBy(_._2, ascending = false)
+    data.map(_ (nameId)).flatMap(_.split(' ')).map(word => (word, 1)).reduceByKey(_ + _).sortBy(_._2, ascending = false)
   }
 
   /** mostCommonCountry tells which country has the most
@@ -92,7 +92,16 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     *         doesn't have that entry.
     */
   def mostCommonCountry(data: RDD[Array[String]], path: String): String = {
-    ???
+    val countryIdColumn = 1
+    val countryIdsAndNames = spark.sparkContext.textFile(path).map(_.split(',')).map(keyValue => (keyValue(0), keyValue(1)))
+    val countryIds = data.map(array => Array(array(countryIdColumn)))
+    val mostCommonCountryId = mostCommonWords(countryIds).take(1)(0)._1
+    val countryName = countryIdsAndNames.filter(_._2 == mostCommonCountryId).map(_._1)
+    if(countryName.isEmpty()) {
+      ""
+    } else {
+      countryName.first()
+    }
   }
 
   //
