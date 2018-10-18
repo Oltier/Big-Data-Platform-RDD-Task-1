@@ -1,6 +1,6 @@
 package questions
 
-import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.{Edge, Graph, VertexId, VertexRDD}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 
@@ -197,7 +197,22 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     *
     */
   def loadSocial(path: String): Graph[Int, Int] = {
-    ???
+    val pattern = "\\s+([0-9]+)\\s+\\|\\s+([0-9]+)".r
+    val userRelationships = spark.sparkContext.textFile(path)
+      .filter(_.matches(pattern.toString()))
+      .map(line => {
+        val pattern(firstUserId, secondUserId) = line
+        (firstUserId.toInt, secondUserId.toInt)
+      })
+    val col1 = userRelationships.map(_._1)
+    val col2 = userRelationships.map(_._2)
+    val vertices = (col1 ++ col2).distinct.map(id => (id.toLong, id))
+    val edges = userRelationships
+      .map(uids => (uids, 1))
+      .reduceByKey(_ + _)
+      .map(edgeData => Edge(edgeData._1._1, edgeData._1._1, edgeData._2))
+
+    Graph(vertices, edges)
   }
 
   /**
