@@ -1,34 +1,33 @@
 package questions
 
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.rdd.RDD
-import org.apache.spark.SparkConf
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
 
 object Main {
-    def main(args: Array[String]): Unit = {
-	
-        Logger.getLogger("org").setLevel(Level.OFF)
-        Logger.getLogger("akka").setLevel(Level.OFF)
+  def main(args: Array[String]): Unit = {
 
-        val spark = SparkSession.builder
-          .master("local")
-          .appName("main")
-          .config("spark.driver.memory", "5g")
-          .getOrCreate()
+    Logger.getLogger("org").setLevel(Level.OFF)
+    Logger.getLogger("akka").setLevel(Level.OFF)
 
-        val path = getClass().getResource("/allCountries.txt").toString
-        val processor = new GeoProcessor(spark,path)
+    val spark = SparkSession.builder
+      .master("local")
+      .appName("main")
+      .config("spark.driver.memory", "5g")
+      .getOrCreate()
 
-        //example for printing
-        val filtered = processor.filterData(processor.file)
+    val path = getClass().getResource("/allCountries.txt").toString
+    val processor = new GeoProcessor(spark, path)
 
-        filtered.take(5).foreach(x => println(x.mkString(" ")))
+    //example for printing
+    val filtered = processor.filterData(processor.file)
 
-        //processor.filterElevation("FI", filtered).take(10).foreach(x => print(x + " "))
+    val mostCommonWords = processor.mostCommonWords(filtered)
 
-        //stop spark
-        spark.stop()
-    }
+    mostCommonWords.take(10).foreach(println(_))
+
+    //processor.filterElevation("FI", filtered).take(10).foreach(x => print(x + " "))
+
+    //stop spark
+    spark.stop()
+  }
 }

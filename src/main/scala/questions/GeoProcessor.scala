@@ -78,7 +78,8 @@ class GeoProcessor(spark: SparkSession, filePath: String) extends Serializable {
     * e.g ("hotel", 234), ("airport", 120), ("new", 12)
     */
   def mostCommonWords(data: RDD[Array[String]]): RDD[(String, Int)] = {
-    ???
+    val nameId = 0
+    data.map(_(nameId)).flatMap(_.split(' ')).map(word => (word, 1)).reduceByKey(_ + _).sortBy(_._2, ascending = false)
   }
 
   /** mostCommonCountry tells which country has the most
